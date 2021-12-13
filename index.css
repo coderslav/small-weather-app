@@ -1,0 +1,60 @@
+html {
+    display: table;
+    width: 100vw;
+    height: 100vh;
+    background: linear-gradient(#00cdf0, #0093a1);
+}
+body {
+    display: table-cell;
+    margin: 0;
+    vertical-align: middle;
+}
+h1 {
+    width: max-content;
+    margin: 1rem auto;
+    font-size: 3rem;
+}
+h2 {
+    font-size: 2rem;
+}
+img {
+    width: 6rem;
+}
+.total-wrap {
+    display: flex;
+    flex-direction: column;
+}
+.input-grid-wrap {
+    display: grid;
+    margin: 3rem auto;
+    gap: 1rem;
+    grid-template-columns: 3fr max-content 1fr;
+}
+.grid-item {
+    font-size: 1.5rem;
+    padding: 1rem;
+    border-radius: 0.3125rem;
+}
+.input,
+.dropdown {
+    border: 0.0625rem solid white;
+    background-color: white;
+}
+.input:focus,
+.dropdown:focus {
+    outline-color: #4ca6f4;
+}
+.submit-button {
+    color: white;
+    background-color: #4f00ff;
+}
+.result-wrap {
+    display: flex;
+    justify-content: center;
+    gap: 3rem;
+}
+.result {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
