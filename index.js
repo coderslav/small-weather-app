@@ -1,10 +1,14 @@
 const APIkeyGetCoordinates = '5fe5501f8b224c32bf83be111a8c839a';
 const APIkeyGetWeather = '932eba860af942187c533f1e16deb26f';
 
+let nightMode = false;
+
 let input = document.querySelector('.input');
 let selector = document.querySelector('.dropdown');
 let submitButton = document.querySelector('.submit-button');
 let resultWrap = document.querySelector('.result-wrap');
+let root = document.getElementById('root');
+let header = document.getElementById('header');
 
 function dayHandler(unix_timestamp, timezone) {
     let date = new Date(unix_timestamp * 1000);
@@ -44,17 +48,44 @@ function submitHandler(event) {
                         console.log('Here');
                         input.value = '';
                     } else {
-                        fetch(`https://api.openweathermap.org/data/2.5/onecall?lat=${data.results[0].geometry.lat}&lon=${data.results[0].geometry.lng}&exclude=minutely,hourly,current&units=metric&appid=${APIkeyGetWeather}`)
+                        fetch(`https://api.openweathermap.org/data/2.5/onecall?lat=${data.results[0].geometry.lat}&lon=${data.results[0].geometry.lng}&exclude=minutely,hourly&units=metric&appid=${APIkeyGetWeather}`)
                             .then((response) => response.json())
                             .then((data) => {
+                                if (data.current.weather[0].icon.includes('n')) {
+                                    if (!nightMode) {
+                                        nightMode = root.classList.toggle('night-mode');
+                                        header.classList.toggle('night-mode');
+                                        resultWrap.classList.toggle('night-mode');
+                                    }
+                                } else {
+                                    if (nightMode) {
+                                        nightMode = root.classList.toggle('night-mode');
+                                        header.classList.toggle('night-mode');
+                                        resultWrap.classList.toggle('night-mode');
+                                    }
+                                }
                                 for (let i = 0; i < parseInt(selector.value); i++) {
-                                    resultWrap.insertAdjacentHTML(
-                                        'beforeend',
-                                        `<div class="result">
-                                            <h2>${dayHandler(data.daily[i].dt, data.timezone).date}</h2>
-                                            <img src="${weatherIconHandler(data.daily[i].weather[0].id)}" alt="Weather Picture" />
-                                        </div>`
-                                    );
+                                    if (nightMode) {
+                                        setTimeout(() => {
+                                            resultWrap.insertAdjacentHTML(
+                                                'beforeend',
+                                                `<div class="result">
+                                                    <h2>${dayHandler(data.daily[i].dt, data.timezone).date}</h2>
+                                                    <img class="night-mode" src="${weatherIconHandler(data.daily[i].weather[0].id)}" alt="Weather Picture" />
+                                                </div>`
+                                            );
+                                        }, 1000 * i);
+                                    } else {
+                                        setTimeout(() => {
+                                            resultWrap.insertAdjacentHTML(
+                                                'beforeend',
+                                                `<div class="result">
+                                                    <h2>${dayHandler(data.daily[i].dt, data.timezone).date}</h2>
+                                                    <img id="image" src="${weatherIconHandler(data.daily[i].weather[0].id)}" alt="Weather Picture" />
+                                                </div>`
+                                            );
+                                        }, 1000 * i);
+                                    }
                                 }
                             })
                             .catch((error) => window.alert(error));
