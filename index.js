@@ -13,6 +13,8 @@ let resultWrap = document.querySelector('.result-wrap');
 let root = document.getElementById('root');
 let header = document.getElementById('header');
 
+let timeoutRenders = [];
+
 function dayHandler(unix_timestamp, timezone) {
     let date = new Date(unix_timestamp * 1000);
     let dateData = {
@@ -51,27 +53,36 @@ function render(data, numberOfDays) {
             resultWrap.classList.toggle('night-mode');
         }
     }
+    resultWrap.textContent = '';
+    for (let i = 0; i < timeoutRenders.length; i++) {
+        clearTimeout(timeoutRenders[i]);
+    }
+    timeoutRenders = [];
     for (let i = 0; i < parseInt(numberOfDays); i++) {
         if (nightMode) {
-            setTimeout(() => {
-                resultWrap.insertAdjacentHTML(
-                    'beforeend',
-                    `<div class="result">
+            timeoutRenders.push(
+                setTimeout(() => {
+                    resultWrap.insertAdjacentHTML(
+                        'beforeend',
+                        `<div class="result">
                 <h2>${dayHandler(data.daily[i].dt, data.timezone).date}</h2>
                 <img class="night-mode" src="${weatherIconHandler(data.daily[i].weather[0].id)}" alt="Weather Picture" />
             </div>`
-                );
-            }, 1000 * i);
+                    );
+                }, 1000 * i)
+            );
         } else {
-            setTimeout(() => {
-                resultWrap.insertAdjacentHTML(
-                    'beforeend',
-                    `<div class="result">
+            timeoutRenders.push(
+                setTimeout(() => {
+                    resultWrap.insertAdjacentHTML(
+                        'beforeend',
+                        `<div class="result">
                 <h2>${dayHandler(data.daily[i].dt, data.timezone).date}</h2>
                 <img id="image" src="${weatherIconHandler(data.daily[i].weather[0].id)}" alt="Weather Picture" />
             </div>`
-                );
-            }, 1000 * i);
+                    );
+                }, 1000 * i)
+            );
         }
     }
 }
@@ -80,7 +91,6 @@ async function getWeather(lat, lng, APIkey) {
     fetch(`https://api.openweathermap.org/data/2.5/onecall?lat=${lat}&lon=${lng}&exclude=minutely,hourly&units=metric&appid=${APIkey}`)
         .then((response) => response.json())
         .then((data) => {
-            console.log('Был запрос на погоду');
             state.weather[input.value.toLowerCase()] = data;
             state.weather[input.value.toLowerCase()].timeout = new Date().getTime() + timer;
             localStorage['state'] = JSON.stringify(state);
@@ -92,7 +102,6 @@ async function getCoordinates(city, APIkey) {
     fetch(`https://api.opencagedata.com/geocode/v1/json?q=${city}&key=${APIkey}&no_annotations=1&limit=1`)
         .then((response) => response.json())
         .then((data) => {
-            console.log('Был запрос на координаты');
             if (data.results.length === 0) {
                 window.alert(`We cannot find the city ${input.value} :(`);
                 input.value = '';
@@ -118,10 +127,10 @@ function submitHandler(event) {
                 getCoordinates(input.value, APIkeyGetCoordinates);
             }
         } else {
+            resultWrap.textContent = '';
             this.value = '';
             window.alert('Enter the city name, please');
         }
-        resultWrap.textContent = '';
     }
 }
 
