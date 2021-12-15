@@ -86,6 +86,15 @@ function render(data, numberOfDays) {
         }
     }
 }
+function placeHolder() {
+    let executed = false;
+    return function () {
+        if (!executed) {
+            resultWrap.classList.toggle('keep-place');
+            executed = true;
+        }
+    };
+}
 
 async function getWeather(lat, lng, APIkey) {
     fetch(`https://api.openweathermap.org/data/2.5/onecall?lat=${lat}&lon=${lng}&exclude=minutely,hourly&units=metric&appid=${APIkey}`)
@@ -116,6 +125,7 @@ async function getCoordinates(city, APIkey) {
 
 function submitHandler(event) {
     if (event.key === 'Enter' || this === submitButton) {
+        keepPlace();
         if (input.value) {
             if (state.coordinates[input.value.toLowerCase()]) {
                 if (state.weather[input.value.toLowerCase()] && state.weather[input.value.toLowerCase()].timeout > new Date().getTime()) {
@@ -136,3 +146,4 @@ function submitHandler(event) {
 
 input.addEventListener('keypress', submitHandler);
 submitButton.addEventListener('click', submitHandler);
+const keepPlace = placeHolder();

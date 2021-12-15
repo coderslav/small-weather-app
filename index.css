@@ -81,3 +81,6 @@ img.night-mode {
     align-items: center;
     animation: append-animate 1s linear;
 }
+.keep-place{
+    height: 11.630875rem;
+}
