@@ -4,8 +4,6 @@ const APIkeyGetWeather = '932eba860af942187c533f1e16deb26f';
 const timer = 60000;
 let state = localStorage.state ? JSON.parse(localStorage.state) : { coordinates: {}, weather: {} };
 
-const cacheName = 'weatherAppCache';
-
 let nightMode = false;
 
 let input = document.querySelector('.input');
@@ -23,7 +21,6 @@ function dayHandler(unix_timestamp, timezone) {
     };
     return dateData;
 }
-
 function weatherIconHandler(id) {
     if (id === 800) {
         return './images/sun.svg';
@@ -40,7 +37,6 @@ function weatherIconHandler(id) {
         return './images/rain.svg';
     }
 }
-
 function render(data, numberOfDays) {
     if (data.current.weather[0].icon.includes('n')) {
         if (!nightMode) {
@@ -79,6 +75,7 @@ function render(data, numberOfDays) {
         }
     }
 }
+
 async function getWeather(lat, lng, APIkey) {
     fetch(`https://api.openweathermap.org/data/2.5/onecall?lat=${lat}&lon=${lng}&exclude=minutely,hourly&units=metric&appid=${APIkey}`)
         .then((response) => response.json())
@@ -91,7 +88,6 @@ async function getWeather(lat, lng, APIkey) {
         })
         .catch((error) => window.alert(error));
 }
-
 async function getCoordinates(city, APIkey) {
     fetch(`https://api.opencagedata.com/geocode/v1/json?q=${city}&key=${APIkey}&no_annotations=1&limit=1`)
         .then((response) => response.json())
@@ -108,6 +104,7 @@ async function getCoordinates(city, APIkey) {
         })
         .catch((error) => window.alert(error));
 }
+
 function submitHandler(event) {
     if (event.key === 'Enter' || this === submitButton) {
         if (input.value) {
