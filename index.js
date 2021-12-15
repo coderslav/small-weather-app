@@ -1,6 +1,12 @@
 const APIkeyGetCoordinates = '5fe5501f8b224c32bf83be111a8c839a';
 const APIkeyGetWeather = '932eba860af942187c533f1e16deb26f';
 
+const timer = 60000;
+let state = {
+    coordinates: {},
+    weather: {},
+};
+
 let nightMode = false;
 
 let input = document.querySelector('.input');
@@ -36,66 +42,88 @@ function weatherIconHandler(id) {
     }
 }
 
+function render(data, numberOfDays) {
+    if (data.current.weather[0].icon.includes('n')) {
+        if (!nightMode) {
+            nightMode = root.classList.toggle('night-mode');
+            header.classList.toggle('night-mode');
+            resultWrap.classList.toggle('night-mode');
+        }
+    } else {
+        if (nightMode) {
+            nightMode = root.classList.toggle('night-mode');
+            header.classList.toggle('night-mode');
+            resultWrap.classList.toggle('night-mode');
+        }
+    }
+    for (let i = 0; i < parseInt(numberOfDays); i++) {
+        if (nightMode) {
+            setTimeout(() => {
+                resultWrap.insertAdjacentHTML(
+                    'beforeend',
+                    `<div class="result">
+                <h2>${dayHandler(data.daily[i].dt, data.timezone).date}</h2>
+                <img class="night-mode" src="${weatherIconHandler(data.daily[i].weather[0].id)}" alt="Weather Picture" />
+            </div>`
+                );
+            }, 1000 * i);
+        } else {
+            setTimeout(() => {
+                resultWrap.insertAdjacentHTML(
+                    'beforeend',
+                    `<div class="result">
+                <h2>${dayHandler(data.daily[i].dt, data.timezone).date}</h2>
+                <img id="image" src="${weatherIconHandler(data.daily[i].weather[0].id)}" alt="Weather Picture" />
+            </div>`
+                );
+            }, 1000 * i);
+        }
+    }
+}
+async function getWeather(lat, lng, APIkey) {
+    fetch(`https://api.openweathermap.org/data/2.5/onecall?lat=${lat}&lon=${lng}&exclude=minutely,hourly&units=metric&appid=${APIkey}`)
+        .then((response) => response.json())
+        .then((data) => {
+            console.log('Был запрос на погоду');
+            state.weather[input.value.toLowerCase()] = data;
+            state.weather[input.value.toLowerCase()].timeout = new Date().getTime() + timer;
+            render(data, selector.value);
+        })
+        .catch((error) => window.alert(error));
+}
+
+async function getCoordinates(city, APIkey) {
+    fetch(`https://api.opencagedata.com/geocode/v1/json?q=${city}&key=${APIkey}&no_annotations=1&limit=1`)
+        .then((response) => response.json())
+        .then((data) => {
+            console.log('Был запрос на координаты');
+            if (data.results.length === 0) {
+                window.alert(`We cannot find the city ${input.value} :(`);
+                input.value = '';
+            } else {
+                state.coordinates[input.value.toLowerCase()] = data;
+                getWeather(data.results[0].geometry.lat, data.results[0].geometry.lng, APIkeyGetWeather);
+            }
+        })
+        .catch((error) => window.alert(error));
+}
 function submitHandler(event) {
     if (event.key === 'Enter' || this === submitButton) {
         if (input.value) {
-            resultWrap.textContent = '';
-            fetch(`https://api.opencagedata.com/geocode/v1/json?q=${input.value}&key=${APIkeyGetCoordinates}&no_annotations=1&limit=1`)
-                .then((response) => response.json())
-                .then((data) => {
-                    if (data.results.length === 0) {
-                        window.alert(`We cannot find the city ${input.value} :(`);
-                        console.log('Here');
-                        input.value = '';
-                    } else {
-                        fetch(`https://api.openweathermap.org/data/2.5/onecall?lat=${data.results[0].geometry.lat}&lon=${data.results[0].geometry.lng}&exclude=minutely,hourly&units=metric&appid=${APIkeyGetWeather}`)
-                            .then((response) => response.json())
-                            .then((data) => {
-                                if (data.current.weather[0].icon.includes('n')) {
-                                    if (!nightMode) {
-                                        nightMode = root.classList.toggle('night-mode');
-                                        header.classList.toggle('night-mode');
-                                        resultWrap.classList.toggle('night-mode');
-                                    }
-                                } else {
-                                    if (nightMode) {
-                                        nightMode = root.classList.toggle('night-mode');
-                                        header.classList.toggle('night-mode');
-                                        resultWrap.classList.toggle('night-mode');
-                                    }
-                                }
-                                for (let i = 0; i < parseInt(selector.value); i++) {
-                                    if (nightMode) {
-                                        setTimeout(() => {
-                                            resultWrap.insertAdjacentHTML(
-                                                'beforeend',
-                                                `<div class="result">
-                                                    <h2>${dayHandler(data.daily[i].dt, data.timezone).date}</h2>
-                                                    <img class="night-mode" src="${weatherIconHandler(data.daily[i].weather[0].id)}" alt="Weather Picture" />
-                                                </div>`
-                                            );
-                                        }, 1000 * i);
-                                    } else {
-                                        setTimeout(() => {
-                                            resultWrap.insertAdjacentHTML(
-                                                'beforeend',
-                                                `<div class="result">
-                                                    <h2>${dayHandler(data.daily[i].dt, data.timezone).date}</h2>
-                                                    <img id="image" src="${weatherIconHandler(data.daily[i].weather[0].id)}" alt="Weather Picture" />
-                                                </div>`
-                                            );
-                                        }, 1000 * i);
-                                    }
-                                }
-                            })
-                            .catch((error) => window.alert(error));
-                    }
-                })
-                .catch((error) => window.alert(error));
+            if (state.coordinates[input.value.toLowerCase()]) {
+                if (state.weather[input.value.toLowerCase()] && state.weather[input.value.toLowerCase()].timeout > new Date().getTime()) {
+                    render(state.weather[input.value.toLowerCase()], selector.value);
+                } else {
+                    getWeather(state.coordinates[input.value.toLowerCase()].results[0].geometry.lat, state.coordinates[input.value.toLowerCase()].results[0].geometry.lng, APIkeyGetWeather);
+                }
+            } else {
+                getCoordinates(input.value, APIkeyGetCoordinates);
+            }
         } else {
             this.value = '';
             window.alert('Enter the city name, please');
         }
+        resultWrap.textContent = '';
     }
 }
 
