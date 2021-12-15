@@ -2,10 +2,9 @@ const APIkeyGetCoordinates = '5fe5501f8b224c32bf83be111a8c839a';
 const APIkeyGetWeather = '932eba860af942187c533f1e16deb26f';
 
 const timer = 60000;
-let state = {
-    coordinates: {},
-    weather: {},
-};
+let state = localStorage.state ? JSON.parse(localStorage.state) : { coordinates: {}, weather: {} };
+
+const cacheName = 'weatherAppCache';
 
 let nightMode = false;
 
@@ -87,6 +86,7 @@ async function getWeather(lat, lng, APIkey) {
             console.log('Был запрос на погоду');
             state.weather[input.value.toLowerCase()] = data;
             state.weather[input.value.toLowerCase()].timeout = new Date().getTime() + timer;
+            localStorage['state'] = JSON.stringify(state);
             render(data, selector.value);
         })
         .catch((error) => window.alert(error));
@@ -102,6 +102,7 @@ async function getCoordinates(city, APIkey) {
                 input.value = '';
             } else {
                 state.coordinates[input.value.toLowerCase()] = data;
+                localStorage['state'] = JSON.stringify(state);
                 getWeather(data.results[0].geometry.lat, data.results[0].geometry.lng, APIkeyGetWeather);
             }
         })
